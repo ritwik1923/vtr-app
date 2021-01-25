@@ -1,5 +1,5 @@
 # vtr
-Virtual trial room
+Virtual trial room\n
 A new Flutter project.
 
 ## Getting Started
