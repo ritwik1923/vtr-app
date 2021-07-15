@@ -14,6 +14,7 @@ class ImageShopingListWidget extends StatefulWidget {
 class _ImageShopingListWidgettState extends State<ImageShopingListWidget> {
   NetworkHandler nh = NetworkHandler();
   List items;
+  var img = null;
   final oCcy = new NumberFormat("#,##0.00", "en_US");
 
   _ImageShopingListWidgettState();
@@ -25,11 +26,14 @@ class _ImageShopingListWidgettState extends State<ImageShopingListWidget> {
   }
 
   Future getAlldata() async {
-    final res = await nh.allData("/allData");
+    final res = await nh.allData("/getallcloths");
+    debugPrint("res :: $res");
+    // img = await nh.getcloths("/getcloths", 'men-2689543267705558');
 
     this.setState(() {
       items = res;
-      debugPrint("responded  ${res.length}");
+      debugPrint("responded  ${res.length} \n\n$img\n\n");
+
       // debugPrint("responded  $items");
     });
     // print(items[0].data);
@@ -43,133 +47,119 @@ class _ImageShopingListWidgettState extends State<ImageShopingListWidget> {
     double cardWidth = uiWidth;
     String stock = "";
     return Scaffold(
-      appBar: new AppBar(
-          title: new Text("Listviews"), backgroundColor: Colors.blue),
-      body: ListView.builder(
-          itemCount: items == null ? 0 : items.length,
-          itemBuilder: (context, index) {
+        appBar: new AppBar(
+            title: new Text("Listviews"), backgroundColor: Colors.blue),
+        body: GridView.count(
+          // Create a grid with 2 columns. If you change the scrollDirection to
+          // horizontal, this produces 2 rows.
+          crossAxisCount: 2,
+          // Generate 100 widgets that display their index in the List.
+          children:
+              List.generate(items == null ? 0 : items.length * 1000, (index) {
+            var brand = 'levi\'s';
+            var price = (index + 1000) % 1999;
+            var discount = index * 50 % 29;
+            var item = {
+              "_id": items[index % 4]['_id'],
+              "price": price,
+              "discount": discount,
+              "brand": brand,
+            };
             return GestureDetector(
-              onTap: () {
-                debugPrint("$index : ${items[index]["path"]} ");
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) =>
-                            new Index_Cloth(item: items[index])));
-              },
-              child: Card(
-                child: Row(
-                  children: [
-                    Column(
-                      children: [
-                        Container(
-                          width: ((120 / 394) * uiWidth),
-                          height: 134,
-                          child:
-                              Image.memory(base64Decode(items[index]['image'])),
-                        ),
-                        Container(
-                          margin: new EdgeInsets.fromLTRB(5, 2, 0, 0),
-                          color: (items[index]['status'] == 1
-                              ? Colors.yellowAccent
-                              : Color(0xFFBDBDBD)),
-                          width: ((120 / 394) * uiWidth),
-                          height: 18,
-                          child: Center(
-                              child: (items[index]['status'] == 1
-                                  ? Text(
-                                      "In Stock",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green),
-                                    )
-                                  : Text(
-                                      "Out Of Stock",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFFFF5252)),
-                                    ))),
-                        ),
-                      ],
+                onTap: () {
+                  debugPrint("$index : ${items[index]["_id"]} ");
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          builder: (context) => new Index_Cloth(item: item)));
+                },
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  height: 150,
+                  child: Column(children: [
+                    Container(
+                      // color: Colors.pink,
+                      child: Image.network(
+                        "http://127.0.0.1:5000/getcloths?id=${items[index % 4]['_id']}",
+                        fit: BoxFit.fill,
+                        height: 145,
+                      ),
+
+                      // ),
                     ),
-                    Column(
-                        // mainAxisSize: MainAxisSize.max,
-                        // crossAxisAlignment: CrossAxisAlignment.stretch,
+                    Container(
+                      child: Column(
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
+                          Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              brand,
+                              // 'levis\'s',
+                              style: TextStyle(
+                                fontSize: 20,
+                                // fontWeight: FontWeight.bold,
+                                color: Colors.black54,
+                              ),
+                              textAlign: TextAlign.left,
                             ),
-                            child: Container(
-                                margin: EdgeInsets.only(left: 5, right: 5),
-                                width: (250 / 394) *
-                                    cardWidth, //MediaQuery.of(context).size.width - 99,
-                                height: cardHeight / 3,
-                                color: (items[index]['status'] == 1
-                                    ? Colors.amber
-                                    : Color(0xFF666666)),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Text(
-                                    "Cotton T-Shirt",
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
                           ),
-                          Container(
-                              margin: EdgeInsets.only(left: 5, right: 5),
-                              width: (250 / 394) *
-                                  cardWidth, //MediaQuery.of(context).size.width - 99,
-                              height: cardHeight / 3,
-                              color: (items[index]['status'] == 1
-                                  ? Colors.teal
-                                  : Colors.grey),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10.0),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.ideographic,
+                            // mainAxisAlignment: MainAxisAlignment.b,
+                            children: [
+                              Align(
+                                alignment: Alignment.bottomLeft,
                                 child: Text(
-                                  "${items[index]["path"]}",
+                                  '₹$price',
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    // color: Colors.white70,
                                   ),
+                                  textAlign: TextAlign.left,
                                 ),
-                              )),
-                          ClipRRect(
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
-                            ),
-                            child: Container(
-                                margin: EdgeInsets.only(left: 5, right: 5),
-                                width: (250 / 394) *
-                                    cardWidth, //MediaQuery.of(context).size.width - 99,
-                                height: cardHeight / 3,
-                                color: (items[index]['status'] == 1
-                                    ? Colors.blueAccent
-                                    : Color(0xFFaaaaaa)),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Text(
-                                    "${oCcy.format(items[index]["price"])}",
-                                    style: TextStyle(
-                                      fontSize: 35,
-                                      color: (Colors.white),
-                                    ),
+                              ),
+                              SizedBox(
+                                width: 8,
+                              ),
+                              Align(
+                                alignment: Alignment.bottomLeft,
+                                child: Text(
+                                  '₹${price * (100 + discount) / 100}',
+                                  style: TextStyle(
+                                    textBaseline: TextBaseline.ideographic,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
                                   ),
-                                )),
-                          ),
-                        ])
-                  ],
-                ),
-              ),
-            );
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                              SizedBox(
+                                width: 4,
+                              ),
+                              Align(
+                                alignment: Alignment.bottomLeft,
+                                child: Text(
+                                  '($discount% off)',
+                                  style: TextStyle(
+                                    textBaseline: TextBaseline.ideographic,
+                                    fontSize: 12,
+                                    // fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    )
+                  ]),
+                ));
           }),
-    );
-    // );
+        ));
   }
 }

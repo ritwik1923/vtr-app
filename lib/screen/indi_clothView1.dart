@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:vtr/networkHandler/NetworkHandler.dart';
 import 'dart:convert';
 import 'package:vtr/screen/vtr.dart';
 import 'package:intl/intl.dart'; // currency converter
@@ -16,31 +17,49 @@ class Index_Cloth extends StatefulWidget {
 }
 
 class _Index_ClothState extends State<Index_Cloth> {
-  final v = Img();
+  NetworkHandler nh = NetworkHandler();
+  // final v = Img();
   final oCcy = new NumberFormat("#,##0.00", "en_US");
   Map<String, dynamic> items;
   _Index_ClothState(this.items);
   Uint8List img;
   Uint8List stock;
-  List<Uint8List> images;
-  Future vtr(BuildContext context) async {
-    final pic = await Navigator.push(context,
-        new MaterialPageRoute(builder: (context) => new ImagePickerApp()));
+  List<String> images = [];
+  int p = 0;
+  @override
+  void initState() {
+    images.add("http://127.0.0.1:5000/getcloths?id=${items['_id']}");
+    super.initState();
+  }
+
+  // List<Uint8List> images;
+  Future vtr(BuildContext context, String clothid) async {
+    final pic = await Navigator.push(
+        context,
+        new MaterialPageRoute(
+            builder: (context) => new ImagePickerApp(
+                  clothid: clothid,
+                )));
     setState(() {
-      // images[0] = img;
-      // images[1] = pic;
-      img = (pic);
-      stock = pic;
-      // ignore: await_only_futures
-      debugPrint("stock $stock");
+      images.add(nh.get(pic));
+      ++p;
+      for (int i = 0; i < 2; i++) {
+        debugPrint("$i: ${images[i]}");
+      }
+      //   // images[0] = img;
+      //   // images[1] = pic;
+      //   img = (pic);
+      //   stock = pic;
+      //   // ignore: await_only_futures
+      //   debugPrint("stock $stock");
     });
   }
 
-  Uint8List imageAdd(Uint8List s) {
-    images.add(s);
-    debugPrint(" ${images[0]}");
-    return s;
-  }
+  // Uint8List imageAdd(Uint8List s) {
+  //   images.add(s);
+  //   debugPrint(" ${images[0]}");
+  //   return s;
+  // }
 
   // In the constructor, require a Todo.
   @override
@@ -68,7 +87,13 @@ class _Index_ClothState extends State<Index_Cloth> {
                 height: (240 / 425) * uiHeight,
                 child: img != null
                     ? Image.memory(img)
-                    : Image.memory(base64Decode(items['image'])),
+                    :
+                    // Text("No data")
+                    Image.network(
+                        images[p],
+                        fit: BoxFit.fill,
+                        height: 145,
+                      ),
               ),
             ),
             SizedBox(
@@ -102,13 +127,12 @@ class _Index_ClothState extends State<Index_Cloth> {
                         )),
                     Expanded(
                         flex: 1,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10.0),
-                          child: FlatButton(
-                            onPressed: () {
-                              debugPrint("Intiating Virtual Trial Room");
-                              vtr(context);
-                            },
+                        child: GestureDetector(
+                          onTap: () {
+                            debugPrint("Intiating Virtual Trial Room");
+                            VTR();
+                          },
+                          child: Container(
                             color: Colors.blue,
                             child: Center(
                                 child: Text(
@@ -174,5 +198,18 @@ class _Index_ClothState extends State<Index_Cloth> {
         backgroundColor: Colors.white,
       ),
     );
+  }
+
+  void VTR() {
+    setState(() {
+      var res = vtr(context, items['_id']);
+      debugPrint("res vtr: $res");
+
+      // images.add(nh.get(res));
+      // ++p;
+      // for (int i = 0; i < 2; i++) {
+      //   debugPrint("$i: ${images[i]}");
+      // }
+    });
   }
 }

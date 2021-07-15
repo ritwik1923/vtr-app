@@ -9,34 +9,40 @@ import 'dart:convert';
 import 'package:vtr/networkHandler/NetworkHandler.dart';
 
 class ImagePickerApp extends StatefulWidget {
+  final String clothid;
+
+  const ImagePickerApp({@required this.clothid});
   @override
-  _ImagePickerAppState createState() => _ImagePickerAppState();
+  _ImagePickerAppState createState() => _ImagePickerAppState(clothid);
 }
 
-class Img {
-  final v = _ImagePickerAppState();
-  Uint8List pic;
-  Img({this.pic});
-  //  = v.imgString;
-  // void getimage(Uint8List imgString) {
-  //   pic = imgString;
-  //   debugPrint("pic get: $pic");
-  // }
+// class Img {
+//   final v = _ImagePickerAppState();
+//   Uint8List pic;
+//   Img({this.pic});
+//   //  = v.imgString;
+//   // void getimage(Uint8List imgString) {
+//   //   pic = imgString;
+//   //   debugPrint("pic get: $pic");
+//   // }
 
-  Uint8List sendimage() {
-    debugPrint("pic send: ${v.imgString}");
-    return v.imgString;
-    // return "v.imgString";
-  }
-}
+//   Uint8List sendimage() {
+//     debugPrint("pic send: ${v.imgString}");
+//     return v.imgString;
+//     // return "v.imgString";
+//   }
+// }
 
 class _ImagePickerAppState extends State<ImagePickerApp> {
+  final String clothid;
   NetworkHandler nh = NetworkHandler();
   Dio dio = new Dio();
   File record;
   // Uint8List _base64;
   String name = "VTR";
-  Uint8List imgString;
+  String imgString;
+
+  _ImagePickerAppState(this.clothid);
   // Uint8List sendimage() {
   //   return imgString;
   // }
@@ -48,34 +54,34 @@ class _ImagePickerAppState extends State<ImagePickerApp> {
 
   Future openCamera() async {
     var image = await ImagePicker.pickImage(source: ImageSource.camera);
-    if (image != null) {
-      record = image;
-    }
-    try {
-      String filename = record.path.split('/').last;
-      FormData formdata = new FormData.fromMap({
-        "picture":
-            await MultipartFile.fromFile(record.path, filename: filename),
-      });
+    setState(() async {
+      if (image != null) {
+        record = image;
+      }
+      // try {
+      //   String filename = record.path.split('/').last;
+      //   FormData formdata = new FormData.fromMap({
+      //     "picture":
+      //         await MultipartFile.fromFile(record.path, filename: filename),
+      //   });
 
-      final res2 = await nh.post("/users", formdata);
-      String p = res2['path'];
-      debugPrint("res-2   $p \n $imgString");
+      //   final res2 = await nh.post("/users", formdata);
+      //   String p = res2['path'];
+      //   debugPrint("res-2   $p \n $imgString");
 
-      final decodedBytes = base64Decode(res2['image']);
+      //   final decodedBytes = base64Decode(res2['image']);
 
-      setState(() {
-        name = p;
-        imgString = decodedBytes;
-        // s.getimage(imgString);
-      });
-    } catch (e) {
-      print(e);
-    }
+      //   name = p;
+      //   imgString = decodedBytes;
+      //   // s.getimage(imgString);
+      // } catch (e) {
+      //   print(e);
+      // }
+    });
   }
 
   Future openGallery() async {
-    final s = Img();
+    // final s = Img();
     var image = await ImagePicker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       record = image;
@@ -83,22 +89,22 @@ class _ImagePickerAppState extends State<ImagePickerApp> {
     try {
       String filename = record.path.split('/').last;
       FormData formdata = new FormData.fromMap({
-        "picture":
-            await MultipartFile.fromFile(record.path, filename: filename),
+        "image": await MultipartFile.fromFile(record.path, filename: filename),
+        "clothid": clothid
       });
 
-      final res2 = await nh.post("/users", formdata);
-      String p = res2['path'];
-      debugPrint("res-2   $p \n $imgString");
+      final res2 = await nh.post("/userPicPost", formdata);
+      // String p = res2['path'];
+      // debugPrint("res-2  $imgString");
 
-      final decodedBytes = base64Decode(res2['image']);
+      // final decodedBytes = base64Decode(res2);
 
       setState(() {
-        name = p;
+        name = 'res2';
 
-        imgString = decodedBytes;
-        // s.getimage(imgString);
+        imgString = res2;
       });
+      // s.getimage(imgString);
     } catch (e) {
       print(e);
     }
@@ -128,12 +134,12 @@ class _ImagePickerAppState extends State<ImagePickerApp> {
                           child: Padding(
                               padding: new EdgeInsets.all(20.0),
                               child: Text(
-                                "Are You Ready for Virtual Trailer Room??..",
+                                "Are You Ready for Virtual Trailer Room??.. ${record == null}",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white60, fontSize: 25.0),
                               )))
-                      : Image.memory(imgString),
+                      : Image.network(nh.get(imgString)),
                 ),
                 FlatButton(
                   color: Colors.deepOrangeAccent,
@@ -163,7 +169,7 @@ class _ImagePickerAppState extends State<ImagePickerApp> {
 
   void _sendDataBack(BuildContext context) {
     // String textToSendBack = textFieldController.text;
-    Uint8List s = imgString;
+    String s = imgString;
     debugPrint("sending $s");
     Navigator.pop(context, s);
   }
